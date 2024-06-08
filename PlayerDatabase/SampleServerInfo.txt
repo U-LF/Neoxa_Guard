@@ -1,0 +1,3 @@
+only insert address like this 'tcp://127.0.0.1:3306' in the first line
+insert only server name in the second line like this 'root'
+insert only the server password in the thid line like this 'password123'
