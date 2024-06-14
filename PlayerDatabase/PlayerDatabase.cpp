@@ -156,191 +156,6 @@ AttemptToCreateDatabase:
                     return 0;
                 }
 
-                /*ifstream InputIdFile(IdFile);
-                ifstream InputIpFile(IpFile);
-                ifstream InputNameFile(NameFile);
-
-                vector<string> Ids, Ips, Name;
-
-                while (!InputIdFile.eof())
-                {
-                    string Line;
-                    InputIdFile >> Line;
-                    if (Line == "")
-                    {
-                        continue;
-                    }
-                    Ids.push_back(Line);
-                }
-
-                while (!InputIpFile.eof())
-                {
-                    string Line;
-                    InputIpFile >> Line;
-                    if (Line == "")
-                    {
-                        continue;
-                    }
-                    Ips.push_back(Line);
-                }
-
-                while (!InputNameFile.eof())
-                {
-                    string Line{ "" };
-                    getline(InputNameFile, Line);
-                    if (Line == "")
-                    {
-                        continue;
-                    }
-                    Name.push_back(Line);
-                }
-
-                InputIdFile.close();
-                InputIpFile.close();
-                InputNameFile.close();
-
-                if (Ids.size() != Ips.size() || Ids.size() != Name.size())
-                {
-                    cout << "Something has gone wrong with the data as ip entries, id entries and name entries amount should be same\n";
-                    cout << "It is not advised to proceed further as it will mess up the database\n\n";
-                    cout << "Total ids: " << Ids.size() << endl;
-                    cout << "Total ips: " << Ips.size() << endl;
-                    cout << "Total names: " << Name.size() << endl;
-                    cout << "Program will now be terminated\n";
-                    system("PAUSE");
-                    return 0;
-                }
-
-                //==========================================================================================================================================================
-                // 
-                //==========================================================================================================================================================
-
-                vector<int>CheckPoint(4);
-                int CheckPointIterator{ 0 };
-
-                try
-                {
-                    PreparedStatement* PstmtInsert, * PstmtUpdateName;
-
-                    CreateCheckPoint(CheckPoint, Ids.size());
-
-                    //inserting ids
-                    pstmt = con->prepareStatement("SELECT * FROM id64 WHERE id = ?");
-                    PstmtInsert = con->prepareStatement("INSERT INTO id64 (id, id_name) VALUES (? , ?)");
-                    PstmtUpdateName = con->prepareStatement("UPDATE id64 SET id_name = ? WHERE id = ?");
-
-                    cout << "\nInserting " << Ids.size() << " ids\n";
-
-                    for (auto i{ 0 }; i < Ids.size(); i++)
-                    {
-                        //cout << "accesssing index: " << i << endl;
-                        pstmt->setString(1, Ids.at(i));
-
-                        res = pstmt->executeQuery();
-
-                        if (res->next() == false)
-                        {
-                            PstmtInsert->setString(1, Ids.at(i));
-                            PstmtInsert->setString(2, Name.at(i));
-                            PstmtInsert->execute();
-                        }
-                        else 
-                        {
-                            if (res->getString("id_name") != Name.at(i))
-                            {
-                                PstmtUpdateName->setString(1, Name.at(i));
-                                PstmtUpdateName->setString(2, Ids.at(i));
-                                PstmtUpdateName->execute();
-                            }
-                        }
-
-                        if (CheckPoint.at(CheckPointIterator) == i)
-                        {
-                            cout << "Done with " << CheckPoint.at(CheckPointIterator) << " ids out of " << Ids.size() << " ids\n";
-                            CheckPointIterator++;
-                        }
-                    }
-                    cout << "Done with " << Ids.size() << " ids out of " << Ids.size() << " ids\n";
-                    cout << "\nAll the ids have been inserted\n";
-
-                    //inserting ips
-                    pstmt = con->prepareStatement("SELECT * FROM ips WHERE ip = ?");
-                    PstmtInsert = con->prepareStatement("INSERT INTO ips (ip) VALUES (?)");
-
-                    CreateCheckPoint(CheckPoint, Ips.size());
-                    CheckPointIterator = 0;
-
-                    cout << "\nInserting " << Ips.size() << " ips\n";
-
-                    for (auto i{ 0 }; i < Ips.size(); i++)
-                    {
-                        //cout << "accesssing index: " << i << endl;
-                        pstmt->setString(1, Ips.at(i));
-
-                        res = pstmt->executeQuery();
-
-                        if (res->next() == false)
-                        {
-                            PstmtInsert->setString(1, Ips.at(i));
-                            PstmtInsert->execute();
-                        }
-
-                        if (CheckPoint.at(CheckPointIterator) == i)
-                        {
-                            cout << "Done with " << CheckPoint.at(CheckPointIterator) << " ips out of " << Ips.size() << " ips\n";
-                            CheckPointIterator++;
-                        }
-                    }
-                    cout << "Done with " << Ips.size() << " ips out of " << Ips.size() << " ips\n";
-                    cout << "\nAll the ips have been inserted\n";
-                    delete PstmtInsert;
-                    delete PstmtUpdateName;
-                }
-                catch (SQLException& e)
-                {
-                    cout << "Error msg: " << e.what() << endl;
-                }
-
-                //inserting values in the relation table
-                try
-                {
-                    PreparedStatement* PstmtInsert;
-
-                    pstmt = con->prepareStatement("SELECT * FROM relation_id64_ip WHERE id = ? AND ips = ?");
-                    PstmtInsert = con->prepareStatement("INSERT INTO relation_id64_ip (id, ips) VALUES (?,?)");
-
-                    CheckPointIterator = 0;
-
-                    cout << "\nCreating links between " << Ids.size() << " ids and " << Ips.size() << " ips\n";
-
-                    for (auto i{ 0 }; i < Ids.size(); i++)
-                    {
-                        pstmt->setString(1, Ids.at(i));
-                        pstmt->setString(2, Ips.at(i));
-
-                        res = pstmt->executeQuery();
-
-                        if (res->next() == false)
-                        {
-                            PstmtInsert->setString(1, Ids.at(i));
-                            PstmtInsert->setString(2, Ips.at(i));
-                            PstmtInsert->execute();
-                        }
-
-                        if (CheckPoint.at(CheckPointIterator) == i)
-                        {
-                            cout << "Done creating " << CheckPoint.at(CheckPointIterator) << " links out of " << Ips.size() << " links\n";
-                            CheckPointIterator++;
-                        }
-                    }
-                    cout << "Done creating " << Ips.size() << " links out of " << Ips.size() << " links\n";
-                    cout << "\nAll the links have been created\n";
-                    delete PstmtInsert;
-                }
-                catch (SQLException& e)
-                {
-                    cout << "Error msg: " << e.what() << endl;
-                }*/
                 break;
             }
             case 'B':
@@ -915,8 +730,6 @@ AttemptToCreateDatabase:
                     cout << "Id: " << res->getString("id") << "\n";
                     cout << "Ip: " << res->getString("ips") << "\n\n";
                 }
-                
-                //cout << "\nTo be implemented :)\n";
 
                 break;
             }
@@ -930,8 +743,6 @@ AttemptToCreateDatabase:
                 {
                     cout << "\nData successfully updated / synced in database\n";
                 }
-
-                //cout << "\nTo be implemented :)\n";
 
                 break;
             }
