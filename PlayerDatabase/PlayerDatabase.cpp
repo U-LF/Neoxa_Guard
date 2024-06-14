@@ -40,9 +40,9 @@ int main() {
 
     ServerConInfo.close();
 
-    cout << "Server: " << Server << endl;
+    /*cout << "Server: " << Server << endl;
     cout << "UserName: " << UserName << endl;
-    cout << "Password: " << Password << endl;
+    cout << "Password: " << Password << endl;*/
 
     Driver* driver = nullptr;
     Connection* con = nullptr;
@@ -134,10 +134,10 @@ AttemptToCreateDatabase:
 
                 system("PAUSE");
 
-                const string InputFilename = "data.txt";
-                const string IdFile = "extracted_data_id.txt";
-                const string IpFile = "extracted_data_ip.txt";
-                const string NameFile = "extracted_data_name.txt";
+                string InputFilename = "data.txt";
+                string IdFile = "extracted_data_id.txt";
+                string IpFile = "extracted_data_ip.txt";
+                string NameFile = "extracted_data_name.txt";
 
                 // Check if input file exists
                 ifstream infile(InputFilename);
@@ -151,7 +151,12 @@ AttemptToCreateDatabase:
 
                 writeExtractedData(extractedData, IdFile, IpFile, NameFile);
 
-                ifstream InputIdFile(IdFile);
+                if (!(DataInsertUpdate(IdFile, IpFile, NameFile, con, pstmt, res)))
+                {
+                    return 0;
+                }
+
+                /*ifstream InputIdFile(IdFile);
                 ifstream InputIpFile(IpFile);
                 ifstream InputNameFile(NameFile);
 
@@ -335,7 +340,7 @@ AttemptToCreateDatabase:
                 catch (SQLException& e)
                 {
                     cout << "Error msg: " << e.what() << endl;
-                }
+                }*/
                 break;
             }
             case 'B':
@@ -908,7 +913,7 @@ AttemptToCreateDatabase:
                 while (res->next())
                 {
                     cout << "Id: " << res->getString("id") << "\n";
-                    cout << "Ip: " << res->getString("ips") << "\n";
+                    cout << "Ip: " << res->getString("ips") << "\n\n";
                 }
                 
                 //cout << "\nTo be implemented :)\n";
@@ -917,13 +922,41 @@ AttemptToCreateDatabase:
             }
             case 'G':
             {
-                cout << "\nTo be implemented :)\n";
+                if (!(DataInsertUpdate("Data_Update_Sync_Id.txt", "Data_Update_Sync_Ip.txt", "Data_Update_Sync_Name.txt", con, pstmt, res)))
+                {
+                    return 0;
+                }
+                else
+                {
+                    cout << "\nData successfully updated / synced in database\n";
+                }
+
+                //cout << "\nTo be implemented :)\n";
 
                 break;
             }
             case 'H':
             {
-                cout << "\nTo be implemented :)\n";
+                ofstream IpUpdateFile("Data_Update_Sync_Ip.txt");
+                ofstream IdUpdateFile("Data_Update_Sync_Id.txt");
+                ofstream NameUpdateFile("Data_Update_Sync_Name.txt");
+
+                pstmt = con->prepareStatement("SELECT id.id_name, t.ips, t.id FROM id64 id JOIN relation_id64_ip t ON id.id = t.id");
+
+                res = pstmt->executeQuery();
+
+                while (res->next())
+                {
+                    IpUpdateFile << res->getString("ips") << endl;
+                    IdUpdateFile << res->getString("id") << endl;
+                    NameUpdateFile << res->getString("id_name") << endl;
+                }
+
+                IpUpdateFile.close();
+                IdUpdateFile.close();
+                NameUpdateFile.close();
+
+                cout << "\nData extracted succesfully from database\n";
 
                 break;
             }
@@ -934,7 +967,7 @@ AttemptToCreateDatabase:
                 break;
             }
             //case only for testing purposes
-            case 'X':
+            /*case 'X':
             {
                 try
                 {
@@ -961,7 +994,7 @@ AttemptToCreateDatabase:
                 }
 
                 break;
-            }
+            }*/
             default:
             {
                 cout << "\nInvalid option, Try again\n\n";
