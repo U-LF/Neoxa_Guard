@@ -902,7 +902,16 @@ AttemptToCreateDatabase:
             }
             case 'F':
             {
-                cout << "\nTo be implemented :)\n";
+                pstmt = con->prepareStatement("SELECT id, ips FROM relation_id64_ip WHERE link_date = CURRENT_DATE()-1");
+                res = pstmt->executeQuery();
+
+                while (res->next())
+                {
+                    cout << "Id: " << res->getString("id") << "\n";
+                    cout << "Ip: " << res->getString("ips") << "\n";
+                }
+                
+                //cout << "\nTo be implemented :)\n";
 
                 break;
             }
